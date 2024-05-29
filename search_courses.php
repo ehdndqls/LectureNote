@@ -9,12 +9,13 @@
     <?php
     // 데이터베이스 연결 설정
     $servername = "localhost";
-    $username = "Doh"; // MySQL 사용자 이름 변경
-    $password = "1234"; // MySQL 비밀번호 변경
-    $dbname = "LectureNotes";
+    // 학번과 비밀번호 가져오기
+    $userid = $_GET['userid'];
+    $password = "1234";
+    $dbname = "LectureNotes"; // 데이터베이스 이름
 
     // MySQL 데이터베이스에 연결
-    $conn = new mysqli($servername, $username, $password, $dbname);
+    $conn = new mysqli($servername, $userid, $password, $dbname);
 
     // 연결 확인
     if ($conn->connect_error) {
@@ -48,6 +49,6 @@
 
     <!-- Main 페이지로 돌아가는 버튼 -->
     <br><br>
-    <a href="main.php">이전 페이지로 돌아가기</a>
+    <a href="main.php?userid=<?php echo $userid; ?>">이전 페이지로 돌아가기</a>
 </body>
 </html>

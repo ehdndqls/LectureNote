@@ -1,24 +1,24 @@
 <?php
 session_start();
 
+// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+if (isset($_GET['userid'])) {
+    $_SESSION['userid'] = $_GET['userid'];
+}
+
 // 데이터베이스 연결 설정
 $servername = "localhost";
-$username = "Doh"; // MySQL 사용자 이름 변경
+$userid = $_SESSION['userid']; // MySQL 사용자 이름
 $password = "1234"; // MySQL 비밀번호 변경
 $dbname = "LectureNotes";
 
+
 // MySQL 데이터베이스에 연결
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $userid, $password, $dbname);
 
 // 연결 확인
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
-}
-
-// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-if (!isset($_SESSION['username'])) {
-    header("Location: login.html");
-    exit();
 }
 
 // 수정할 포스트의 ID 가져오기

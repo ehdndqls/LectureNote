@@ -1,26 +1,24 @@
 <?php
-session_start();
+
+if (!isset($_GET['userid'])) {
+    // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+    header("Location: login.html");
+    exit();
+}
 
 // 데이터베이스 연결 설정
 $servername = "localhost";
-$username = "Doh"; // MySQL 사용자 이름 변경
-$password = "1234"; // MySQL 비밀번호 변경
-$dbname = "LectureNotes";
+$userid = $_GET['userid']; // MySQL 사용자 이름
+$password = "1234"; // MySQL 비밀번호
+$dbname = "LectureNotes"; // 데이터베이스 이름
 
 // MySQL 데이터베이스에 연결
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $userid, $password, $dbname);
 
 // 연결 확인
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-
-// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-if (!isset($_SESSION['username'])) {
-    header("Location: login.html");
-    exit();
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -58,8 +56,9 @@ if (!isset($_SESSION['username'])) {
         </tr>
         <?php
         // 공개 게시물 가져오기
-        $public_posts_sql = "SELECT Posts.title, Posts.author_id, Courses.course_name, Posts.created_at, Posts.content
+        $public_posts_sql = "SELECT Posts.title, Users.name AS author_name, Courses.course_name, Posts.created_at, Posts.content
                              FROM Posts
+                             INNER JOIN Users ON Posts.author_id = Users.student_id
                              INNER JOIN Courses ON Posts.course_code = Courses.course_code
                              WHERE Posts.is_public = TRUE";
         $public_posts_result = $conn->query($public_posts_sql);
@@ -68,7 +67,7 @@ if (!isset($_SESSION['username'])) {
             while ($row = $public_posts_result->fetch_assoc()) {
                 echo "<tr>";
                 echo "<td>" . $row['title'] . "</td>";
-                echo "<td>" . $row['author_id'] . "</td>";
+                echo "<td>" . $row['author_name'] . "</td>";
                 echo "<td>" . $row['course_name'] . "</td>";
                 echo "<td>" . $row['created_at'] . "</td>";
                 echo "<td>" . $row['content'] . "</td>";
@@ -80,7 +79,8 @@ if (!isset($_SESSION['username'])) {
         ?>
     </table>
     <br>
-    <a href="main.php">Go back to Main Page</a>
+    <a href="main.php?userid=<?php echo $userid; ?>">이전 페이지로 돌아가기</a>
+
 </body>
 </html>
 

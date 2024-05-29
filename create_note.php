@@ -1,34 +1,30 @@
 <?php
 session_start();
 
+// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+if (isset($_GET['userid'])) {
+    $_SESSION['userid'] = $_GET['userid'];
+}
+
 // 데이터베이스 연결 설정
 $servername = "localhost";
-$username = "Doh"; // MySQL 사용자 이름 변경
+$userid = $_SESSION['userid']; // MySQL 사용자 이름
 $password = "1234"; // MySQL 비밀번호 변경
 $dbname = "LectureNotes";
 
 // MySQL 데이터베이스에 연결
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $userid, $password, $dbname);
 
 // 연결 확인
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-if (!isset($_SESSION['username'])) {
-    header("Location: login.html");
-    exit();
-}
-
-// 사용자 정보 가져오기
-$username = $_SESSION['username'];
-
 // 공개 여부 콤보박스 옵션
 $public_options = array("TRUE", "FALSE");
 
 // 사용자의 수강 중인 과목 가져오기
-$courses_sql = "SELECT course_code FROM Enrollments WHERE student_id='$username'";
+$courses_sql = "SELECT course_code FROM Enrollments WHERE student_id='$userid'";
 $courses_result = $conn->query($courses_sql);
 
 // 과목 코드 옵션 생성
@@ -57,12 +53,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // 게시물 데이터베이스에 추가
     $insert_sql = "INSERT INTO Posts (title, content, author_id, course_code, is_public) 
-                   VALUES ('$title', '$content', '$username', '$course_code', $is_public)";
+                   VALUES ('$title', '$content', '$userid', '$course_code', $is_public)";
     if ($conn->query($insert_sql) === TRUE) {
         // 게시물 추가 성공 시 메시지 출력
         echo "새 게시물이 성공적으로 추가되었습니다.";
         // main.php로 돌아가기
-        echo "<br><br><a href='main.php'>메인 페이지로 돌아가기</a>";
+        echo "<br><br><a href='main.php?userid=$userid'>메인 페이지로 돌아가기</a>";
 
     } else {
         echo "오류: " . $conn->error;
@@ -81,22 +77,22 @@ $conn->close();
     <title>Create Note</title>
 </head>
 <body>
-    <h2>Create New Note</h2>
+    <h2>새로운 노트 생성!</h2>
     <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-        <label for="title">Title:</label><br>
+        <label for="title">제목:</label><br>
         <input type="text" id="title" name="title" required><br><br>
 
-        <label for="content">Content:</label><br>
+        <label for="content">내용:</label><br>
         <textarea id="content" name="content" rows="4" cols="50" required></textarea><br><br>
 
-        <label for="course_code">Course:</label><br>
+        <label for="course_code">과목:</label><br>
         <select id="course_code" name="course_code">
             <?php echo $course_options; ?>
         </select><br><br>
 
-        <label for="is_public">Is Public:</label><br>
+        <label for="is_public">공개여부:</label><br>
         <input type="checkbox" id="is_public" name="is_public" value="1">
-        <label for="is_public">Public</label><br><br>
+        <label for="is_public">공개</label><br><br>
 
         <input type="submit" value="Submit">
     </form>

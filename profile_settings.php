@@ -2,19 +2,19 @@
 session_start();
 
 // 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-if (!isset($_SESSION['username'])) {
+if (!isset($_GET['userid'])) {
     header("Location: login.html");
     exit();
 }
 
 // 데이터베이스 연결 설정
 $servername = "localhost";
-$username = "Doh"; // MySQL 사용자 이름 변경
+$userid = $_GET['userid']; // MySQL 사용자 이름 변경
 $password = "1234"; // MySQL 비밀번호 변경
 $dbname = "LectureNotes";
 
 // MySQL 데이터베이스에 연결
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $userid, $password, $dbname);
 
 // 연결 확인
 if ($conn->connect_error) {
@@ -22,8 +22,8 @@ if ($conn->connect_error) {
 }
 
 // 사용자 정보 가져오기
-$username = $_SESSION['username'];
-$sql = "SELECT * FROM Users WHERE student_id='$username'";
+
+$sql = "SELECT * FROM Users WHERE student_id='$userid'";
 $result = $conn->query($sql);
 
 ?>
@@ -99,13 +99,13 @@ $result = $conn->query($sql);
             echo "<p><strong>구분:</strong> " . $row['role'] . "</p>";
             
             // 사용자가 작성한 Post 개수 가져오기
-            $post_count_sql = "SELECT COUNT(*) AS post_count FROM Posts WHERE author_id='$username'";
+            $post_count_sql = "SELECT COUNT(*) AS post_count FROM Posts WHERE author_id='$userid'";
             $post_count_result = $conn->query($post_count_sql);
             $post_count_row = $post_count_result->fetch_assoc();
             echo "<p><strong>작성한 Post의 개수:</strong> " . $post_count_row['post_count'] . "</p>";
 
             // 수강중인 과목 개수 가져오기
-            $enrolled_count_sql = "SELECT COUNT(*) AS enrolled_count FROM Enrollments WHERE student_id='$username'";
+            $enrolled_count_sql = "SELECT COUNT(*) AS enrolled_count FROM Enrollments WHERE student_id='$userid'";
             $enrolled_count_result = $conn->query($enrolled_count_sql);
             $enrolled_count_row = $enrolled_count_result->fetch_assoc();
             echo "<p><strong>수강중인 과목의 개수:</strong> " . $enrolled_count_row['enrolled_count'] . "</p>";
@@ -121,7 +121,9 @@ $result = $conn->query($sql);
             echo "<input type='password' id='new_password' name='new_password' required>";
             echo "<label for='confirm_password'>새로운 비밀번호 확인:</label>";
             echo "<input type='password' id='confirm_password' name='confirm_password' required>";
-            echo "<input type='submit' value='비밀번호 변경'>";
+    	    // 사용자 ID 데이터를 hidden input으로 추가
+            echo "<input type='hidden' name='userid' value='$userid'>";
+    	    echo "<input type='submit' value='비밀번호 변경'>";
             echo "</form>";
             echo "</div>";
         } else {
@@ -132,5 +134,8 @@ $result = $conn->query($sql);
         $conn->close();
         ?>
     </div>
+    <br>
+    <a href="main.php?userid=<?php echo $userid; ?>">이전 페이지로 돌아가기</a>
+
 </body>
 </html>

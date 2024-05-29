@@ -1,31 +1,27 @@
 <?php
 session_start();
 
+// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+if (isset($_GET['userid'])) {
+    $_SESSION['userid'] = $_GET['userid'];
+}
+
 // 데이터베이스 연결 설정
 $servername = "localhost";
-$username = "Doh"; // MySQL 사용자 이름 변경
+$userid = $_SESSION['userid']; // MySQL 사용자 이름
 $password = "1234"; // MySQL 비밀번호 변경
 $dbname = "LectureNotes";
 
 // MySQL 데이터베이스에 연결
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $userid, $password, $dbname);
 
 // 연결 확인
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-if (!isset($_SESSION['username'])) {
-    header("Location: login.html");
-    exit();
-}
-
-// 사용자 정보 가져오기
-$username = $_SESSION['username'];
-
 // 사용자의 수강 중인 과목 가져오기
-$courses_sql = "SELECT course_code FROM Enrollments WHERE student_id='$username'";
+$courses_sql = "SELECT course_code FROM Enrollments WHERE student_id='$userid'";
 $courses_result = $conn->query($courses_sql);
 
 // 수강 중인 과목 메뉴 옵션 생성
@@ -56,7 +52,7 @@ if ($courses_result->num_rows > 0) {
     <title>My Notes</title>
     <style>
         .content {
-            background-color: #f0f0f0; /* 적절한 배경색으로 변경하세요 */
+            background-color: #f0f0f0; 
             padding: 10px;
             border-radius: 5px;
         }
@@ -82,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $course_row = $course_name_result->fetch_assoc();
             $selected_course_name = $course_row['course_name'];
 
-            $posts_sql = "SELECT * FROM Posts WHERE course_code='$selected_course_code'";
+            $posts_sql = "SELECT * FROM Posts WHERE course_code='$selected_course_code' AND author_id = '$userid'";
             $posts_result = $conn->query($posts_sql);
 
             echo "<h2>" . $selected_course_name . "에 대한 포스트</h2>";
@@ -95,6 +91,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     echo "<p>공개 여부: " . ($post_row['is_public'] ? "공개" : "비공개") . "</p>";
                     echo "<p>" . $post_row['content'] . "</p>"; // content를 맨 마지막에 출력
                     echo "<form style='display:inline-block;margin-right:5px;' action='update_post.php' method='post'>";
+		    echo "<input type='hidden' name='userid'  value='$userid'>";
                     echo "<input type='hidden' name='update_post_id' value='" . $post_row['post_id'] . "'>";
                     echo "<input type='submit' value='수정'>";
                     echo "</form>";
@@ -120,7 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_post_id'])) {
     if ($conn->query($delete_sql) === TRUE) {
         echo "<script>alert('포스트가 삭제되었습니다.');</script>";
         // 삭제 후 페이지를 다시 로드하여 최신 데이터를 표시할 수 있습니다.
-        echo "<script>window.location.reload();</script>";
+        header("mynote.php");
     } else {
         echo "포스트 삭제 중 오류가 발생했습니다.";
     }
@@ -128,7 +125,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_post_id'])) {
 
 ?>
 
-<a href="main.php">초기화면으로 돌아가기</a>
+<br><br><a href='main.php?userid=$userid'>메인 페이지로 돌아가기</a>
 
 </body>
 </html>

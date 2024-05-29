@@ -1,18 +1,51 @@
 <?php
 session_start();
 
-// 사용자가 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-if (!isset($_SESSION['username'])) {
-    header("Location: login.html");
-    exit();
+if(!isset($_SESSION['userid'])){
+    if(!isset($_GET['userid'])){
+	// 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+	header("Location: login.html");
+	exit();
+    }
+    else{
+    	$userid = $_GET['userid']; // MySQL 사용자 이름
+    }
+}
+else{
+    $userid = $_SESSION['userid']; // MySQL 사용자 이름
 }
 
-// 사용자의 학번을 세션에 저장
-if (!isset($_SESSION['student_id'])) {
-    // 여기에 데이터베이스에서 사용자의 학번을 가져오는 코드를 작성하세요.
-    // 사용자의 학번을 $_SESSION['student_id']에 저장하세요.
-    $_SESSION['student_id'] = "사용자의 학번"; // 예시 코드입니다. 실제로 사용자의 학번을 가져와서 저장하세요.
-}
+
+   // userid를 제외한 데이터베이스 연결 설정
+    $servername = "localhost";
+    $password = "1234"; // MySQL 비밀번호
+    $dbname = "LectureNotes"; // 데이터베이스 이름
+
+    // MySQL 데이터베이스에 연결
+    $conn = new mysqli($servername, $userid, $password, $dbname);
+
+    // 연결 확인
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+// 사용자의 이름 저장
+
+  
+    // 데이터베이스에서 사용자의 이름을 가져오는 쿼리
+    $sql = "SELECT name FROM Users WHERE student_id='$userid'";
+    $result = $conn->query($sql);
+
+    // 쿼리 결과 확인 및 사용자의 이름을 세션에 저장
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $name = $row['name'];
+    } else {
+        $_name = "unknown"; // 데이터베이스에서 사용자의 이름을 가져오지 못한 경우 예시 이름 저장
+    }
+
+    // 데이터베이스 연결 닫기
+    $conn->close();
+
 ?>
 
 <!DOCTYPE html>
@@ -107,8 +140,8 @@ if (!isset($_SESSION['student_id'])) {
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-content">
-                <a href="mynotes.php">노트 목록</a>
-                <a href="create_note.php">노트 작성</a>
+                <a href="mynotes.php?userid=<?php echo $userid; ?>">노트 목록</a>
+                <a href="create_note.php?userid=<?php echo $userid; ?>">노트 작성</a>
             </div>
         </div> 
         <div class="dropdown">
@@ -116,8 +149,8 @@ if (!isset($_SESSION['student_id'])) {
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-content">
-                <a href="search.php">노트 검색</a>
-                <a href="search_courses.php">강의 검색</a>
+                <a href="search.php?userid=<?php echo $userid; ?>">노트 검색</a>
+                <a href="search_courses.php?userid=<?php echo $userid; ?>">강의 검색</a>
             </div>
         </div> 
         <div class="dropdown">
@@ -125,8 +158,8 @@ if (!isset($_SESSION['student_id'])) {
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-content">
-                <a href="profile_settings.php">프로필 설정</a>
-                <a href="account_settings.php">계정 설정</a>
+                <a href="profile_settings.php?userid=<?php echo $userid; ?>">프로필 설정</a>
+                <a href="account_settings.php?userid=<?php echo $userid; ?>">계정 설정</a>
             </div>
         </div>
         <div class="dropdown" style="margin-left:auto;">
@@ -136,19 +169,18 @@ if (!isset($_SESSION['student_id'])) {
         </div>
     </div>
     <div class="content">
-        <h2>환영합니다, <?php echo $_SESSION['username']; ?>!</h2>
+        <h2>환영합니다, <?php echo $name; ?>!</h2>
         <p>메뉴를 선택하세요.</p>
         <img src="순천향대학교_seal.png" alt="University Seal">
     </div>
     <script>
-        function logout() {
-            // 로그아웃 요청을 서버로 보냅니다.
-            // 이 부분은 PHP로 로그아웃을 처리하는 방법과 같은 방법으로 수정해야 합니다.
-            // 여기에서는 간단히 로컬 스토리지의 세션을 삭제하고 로그인 페이지로 이동하는 예시 코드를 작성했습니다.
-            localStorage.removeItem('username');
-            localStorage.removeItem('student_id');
-            window.location.href = 'login.html'; // 로그인 페이지로 리다이렉트합니다.
-        }
-    </script>
+    function logout() {
+        // 세션 제거
+        <?php session_unset(); ?>
+        <?php session_destroy(); ?>
+        // 로그인 페이지로 리다이렉트
+        window.location.href = 'login.html';
+    }
+</script>
 </body>
 </html>

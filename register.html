@@ -67,7 +67,7 @@
             <input type="text" id="name" name="name" required>
             <label for="faculty">단과대:</label>
             <select id="faculty" name="faculty" onchange="updateDepartments()" required>
-                <option value="">Select Faculty</option>
+                <option value="">단과대 선택</option>
                 <option value="의과대">의과대</option>
                 <option value="자연대">자연대</option>
                 <option value="인문사회대학">인문사회대학</option>
@@ -76,7 +76,7 @@
             </select>
             <label for="department">학과:</label>
             <select id="department" name="department" required>
-                <option value="">Select Department</option>
+                <option value="">학과 선택</option>
             </select>
             <label for="role">구분:</label>
             <select id="role" name="role" required>
@@ -87,28 +87,22 @@
         </form>
     </div>
     <script>
-        const departmentsByFaculty = {
-            "의과대": ["의예과", "간호학과"],
-            "자연대": ["수학과", "화학과", "생명과학과"],
-            "인문사회대학": ["국문학과", "영문학과", "법학과", "경찰행정학과"],
-            "공과대학": ["컴퓨터공학과", "전기공학과", "전자공학과", "기계공학과"],
-            "SW융합대학": ["컴퓨터소프트웨어공학과", "정보보호학과", "사물인터넷학과"]
-        };
-
+        // 단과대 선택에 따라 학과 목록 업데이트
         function updateDepartments() {
             const facultySelect = document.getElementById("faculty");
             const departmentSelect = document.getElementById("department");
             const selectedFaculty = facultySelect.value;
-            departmentSelect.innerHTML = '<option value="">Select Department</option>';
 
-            if (selectedFaculty && departmentsByFaculty[selectedFaculty]) {
-                departmentsByFaculty[selectedFaculty].forEach(department => {
-                    const option = document.createElement("option");
-                    option.value = department;
-                    option.text = department;
-                    departmentSelect.add(option);
-                });
-            }
+            // AJAX 요청을 사용하여 학과 목록을 업데이트
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "load_departments.php", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    departmentSelect.innerHTML = xhr.responseText;
+                }
+            };
+            xhr.send("faculty=" + encodeURIComponent(selectedFaculty));
         }
     </script>
 </body>

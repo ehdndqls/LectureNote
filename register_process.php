@@ -1,7 +1,7 @@
 <?php
 // 데이터베이스 연결 설정
 $servername = "localhost";
-$username = "Doh"; // MySQL 사용자 이름
+$username = "root"; // MySQL 사용자 이름
 $password = "1234"; // MySQL 비밀번호
 $dbname = "LectureNotes"; // 데이터베이스 이름
 
@@ -38,13 +38,21 @@ if ($check_result->num_rows > 0) {
         // 회원가입 성공 메시지 출력
         echo "회원가입에 성공했습니다!";
 
-        // Post 테이블에 대한 모든 권한 부여
-        $grant_post_sql = "GRANT ALL PRIVILEGES ON LectureNotes.Posts TO '$student_id'@'localhost'";
-        $conn->query($grant_post_sql);
+        // 새로운 데이터베이스 사용자 추가
+        $create_user_sql = "CREATE USER '{$student_id}'@'localhost' IDENTIFIED BY '{$password_hash}'";
+        if ($conn->query($create_user_sql) === TRUE) {
+            echo "새로운 데이터베이스 사용자가 성공적으로 생성되었습니다.";
+        } else {
+            echo "데이터베이스 사용자 생성에 실패했습니다: " . $conn->error;
+        }
 
-        // User 테이블에서 비밀번호 변경 권한만 부여
-        $grant_user_sql = "GRANT UPDATE (password_hash) ON LectureNotes.Users TO '$student_id'@'localhost'";
-        $conn->query($grant_user_sql);
+        // Post 테이블에 대한 모든 권한 부여
+        $grant_post_sql = "GRANT ALL PRIVILEGES ON LectureNotes.* TO '$student_id'@'localhost'";
+        if ($conn->query($grant_post_sql) === TRUE) {
+            echo "사용자에게 데이터베이스 권한이 성공적으로 부여되었습니다.";
+        } else {
+            echo "데이터베이스 권한 부여에 실패했습니다: " . $conn->error;
+        }
 
         // 변경사항 적용
         $conn->query("FLUSH PRIVILEGES");
@@ -52,10 +60,10 @@ if ($check_result->num_rows > 0) {
         // 2초 후 로그인 페이지로 리디렉션
         header("refresh:2;url=login.html");
     } else {
-	echo "회원가입 실패. 이미 존재하는 학번 입니다.";
-   	
-	// 2초 후 로그인 페이지로 리디렉션
-   	header("refresh:2;url=login.html");
+        echo "회원가입 실패. 이미 존재하는 학번 입니다.";
+        
+        // 2초 후 로그인 페이지로 리디렉션
+        header("refresh:2;url=login.html");
     }
 }
 
